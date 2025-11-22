@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Converti video YouTube in sottotitoli e audio italiani. Supporta 12+ lingue, export TXT/DOCX/PDF/MP3. Offline ready.">
+    <meta name="theme-color" content="#FF0000">
+    <title>YouTube → Italiano | Sottotitoli e Audio</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-card: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+            --accent-color: #FF0000;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-card: #2d2d2d;
+            --text-primary: #e4e4e4;
+            --text-secondary: #a8a8a8;
+            --border-color: #404040;
+            --shadow: 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #FF0000 0%, #CC0000 100%);
+            color: white;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow);
+            z-index: 100;
+            transition: transform 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Install Banner */
+        .install-banner {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: none;
+            box-shadow: var(--shadow);
+        }
+
+        .install-banner.show {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .install-banner-content {
+            flex: 1;
+        }
+
+        .install-banner h3 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: var(--accent-color);
+        }
+
+        .install-banner p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .install-banner-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            justify-content: center;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #CC0000;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--border-color);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-icon {
+            padding: 10px;
+            width: 45px;
+            height: 45px;
+        }
+
+        /* Progress */
+        .progress-container {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .progress-container.show {
+            display: block;
+        }
+
+        .progress-bar-wrapper {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            height: 30px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color) 0%, #FF4444 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .progress-message {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Status */
+        .status-message {
+            display: none;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-message.show {
+            display: flex;
+        }
+
+        .status-message.success {
+            background: rgba(40, 167, 69, 0.1);
+            border: 2px solid var(--success-color);
+            color: var(--success-color);
+        }
+
+        .status-message.error {
+            background: rgba(220, 53, 69, 0.1);
+            border: 2px solid var(--error-color);
+            color: var(--error-color);
+        }
+
+        .status-icon {
+            font-size: 1.5rem;
+        }
+
+        /* Download Buttons */
+        .download-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .download-section.show {
+            display: block;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .download-btn {
+            padding: 20px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .download-btn:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .download-btn-icon {
+            font-size: 2rem;
+        }
+
+        .download-btn-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px 20px;
+            min-width: 300px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            border-color: var(--success-color);
+        }
+
+        .toast.error {
+            border-color: var(--error-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* History */
+        .history-section {
+            margin-top: 40px;
+        }
+
+        .history-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .history-item:hover {
+            border-color: var(--accent-color);
+            box-shadow: var(--shadow);
+        }
+
+        .history-item-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+
+        .history-item-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 60px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.6rem;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .download-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .toast {
+                min-width: 250px;
+            }
+
+            .theme-toggle {
+                top: 15px;
+                right: 15px;
+                width: 45px;
+                height: 45px;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+
+    <!-- Install Banner -->
+    <div class="install-banner" id="installBanner">
+        <div class="install-banner-content">
+            <h3>📱 Installa l'app</h3>
+            <p>Accedi più velocemente e usa offline</p>
+        </div>
+        <div class="install-banner-buttons">
+            <button class="btn btn-primary btn-small" id="installBtn">Installa</button>
+            <button class="btn btn-secondary btn-small" id="dismissInstall">Dopo</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🎬 YouTube → Italiano</h1>
+            <p>Estrai sottotitoli e genera audio in italiano da qualsiasi video YouTube. Supporta 12+ lingue.</p>
+        </header>
+
+        <!-- Main Form -->
+        <div class="card">
+            <form id="mainForm">
+                <div class="form-group">
+                    <label for="youtubeUrl">🔗 URL Video YouTube</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="text" 
+                            id="youtubeUrl" 
+                            name="youtube_url"
+                            placeholder="https://youtube.com/watch?v=... oppure youtu.be/..."
+                            required
+                        >
+                        <button type="button" class="btn btn-secondary btn-icon" id="pasteBtn" title="Incolla">📋</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="convertBtn" style="width: 100%;">
+                    🚀
+                    Converti
+                </button>
+            </form>
+
+            <!-- Progress -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar" id="progressBar">
+                        <span id="progressPercentage">0%</span>
+                    </div>
+                </div>
+                <p class="progress-message" id="progressMessage">Elaborazione in corso...</p>
+            </div>
+
+            <!-- Status Message -->
+            <div class="status-message" id="statusMessage">
+                <span class="status-icon" id="statusIcon">✅</span>
+                <span id="statusText">Conversione completata!</span>
+            </div>
+
+            <!-- Download Section -->
+            <div class="download-section" id="downloadSection">
+                <h3 style="margin-bottom: 15px;">📥 Scarica il Risultato</h3>
+                <div class="download-grid">
+                    <div class="download-btn" id="downloadText">
+                        <span class="download-btn-icon">📄</span>
+                        <span class="download-btn-label">TXT</span>
+                    </div>
+                    <div class="download-btn" id="downloadDocx">
+                        <span class="download-btn-icon">📝</span>
+                        <span class="download-btn-label">DOCX</span>
+                    </div>
+                    <div class="download-btn" id="downloadPdf">
+                        <span class="download-btn-icon">📕</span>
+                        <span class="download-btn-label">PDF</span>
+                    </div>
+                    <div class="download-btn" id="downloadAudio">
+                        <span class="download-btn-icon">🎵</span>
+                        <span class="download-btn-label">MP3</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="card history-section" id="historySection" style="display: none;">
+            <h3 style="margin-bottom: 15px;">📜 Cronologia</h3>
+            <div id="historyList"></div>
+            <button class="btn btn-secondary btn-small" id="clearHistory" style="margin-top: 15px;">
+                🗑️ Cancella Cronologia
+            </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="card">
+            <h3 style="margin-bottom: 15px;">📊 Statistiche</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statConversions">0</div>
+                    <div class="stat-label">Conversioni</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statDownloads">0</div>
+                    <div class="stat-label">Download</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Made with ❤️ by Scesho | v4.0.0</p>
+            <p style="margin-top: 10px;">
+                <a href="/api/health" target="_blank" style="color: var(--accent-color); text-decoration: none;">
+                    🔧 API Status
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Global Variables
+        let currentVideoId = null;
+        let deferredPrompt = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initPWA();
+            loadHistory();
+            updateStats();
+            attachEventListeners();
+        });
+
+        // Theme Management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            document.getElementById('themeToggle').textContent = theme === 'light' ? '🌙' : '☀️';
+        }
+
+        // PWA Management
+        function initPWA() {
+            // Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(() => console.log('✅ Service Worker registered'))
+                    .catch(err => console.error('❌ SW registration failed:', err));
+            }
+
+            // Install Prompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                const dismissed = localStorage.getItem('installDismissed');
+                if (!dismissed) {
+                    document.getElementById('installBanner').classList.add('show');
+                }
+            });
+        }
+
+        // Event Listeners
+        function attachEventListeners() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // Install banner
+            document.getElementById('installBtn').addEventListener('click', installApp);
+            document.getElementById('dismissInstall').addEventListener('click', dismissInstall);
+
+            // Paste button
+            document.getElementById('pasteBtn').addEventListener('click', pasteUrl);
+
+            // Form submit
+            document.getElementById('mainForm').addEventListener('submit', handleSubmit);
+
+            // Download buttons
+            document.getElementById('downloadText').addEventListener('click', () => downloadFile('text'));
+            document.getElementById('downloadDocx').addEventListener('click', () => downloadFile('docx'));
+            document.getElementById('downloadPdf').addEventListener('click', () => downloadFile('pdf'));
+            document.getElementById('downloadAudio').addEventListener('click', () => downloadFile('audio'));
+
+            // History
+            document.getElementById('clearHistory').addEventListener('click', clearHistory);
+        }
+
+        // Install App
+        async function installApp() {
+            if (!deferredPrompt) return;
+
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                showToast('App installata con successo! 🎉', 'success');
+            }
+            
+            deferredPrompt = null;
+            document.getElementById('installBanner').classList.remove('show');
+        }
+
+        function dismissInstall() {
+            localStorage.setItem('installDismissed', 'true');
+            document.getElementById('installBanner').classList.remove('show');
+        }
+
+        // Paste URL
+        async function pasteUrl() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('youtubeUrl').value = text;
+                showToast('URL incollato! 📋', 'success');
+            } catch (err) {
+                showToast('Impossibile incollare. Usa Ctrl+V', 'error');
+            }
+        }
+
+        // Form Submit
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const youtubeUrl = document.getElementById('youtubeUrl').value.trim();
+            
+            if (!youtubeUrl) {
+                showToast('Inserisci un URL YouTube valido', 'error');
+                return;
+            }
+
+            // Reset UI
+            resetUI();
+            showProgress(true);
+            disableForm(true);
+
+            try {
+                // Call API
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        youtube_url: youtubeUrl,
+                        mode: 'both',
+                        slow: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Errore durante la conversione');
+                }
+
+                currentVideoId = data.video_id;
+
+                // Start polling progress
+                pollProgress(currentVideoId);
+
+                // Save to history
+                saveToHistory({
+                    videoId: currentVideoId,
+                    url: youtubeUrl,
+                    date: new Date().toISOString(),
+                    sourceLang: data.source_lang
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('error', error.message || 'Errore durante la conversione');
+                showProgress(false);
+                disableForm(false);
+            }
+        }
+
+        // Progress Polling
+        async function pollProgress(videoId) {
+            const maxAttempts = 120; // 2 minuti (120 * 1s)
+            let attempts = 0;
+
+            const interval = setInterval(async () => {
+                attempts++;
+
+                if (attempts > maxAttempts) {
+                    clearInterval(interval);
+                    showStatus('error', 'Timeout: operazione troppo lunga');
+                    showProgress(false);
+                    disableForm(false);
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/progress/${videoId}`);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        updateProgress(data.percentage, data.message);
+
+                        if (data.percentage >= 100) {
+                            clearInterval(interval);
+                            setTimeout(() => {
+                                showStatus('success', 'Conversione completata! 🎉');
+                                showProgress(false);
+                                showDownloadSection(true);
+                                disableForm(false);
+                                updateStats();
+                            }, 500);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 1000);
+        }
+
+        // UI Functions
+        function resetUI() {
+            showStatus('', '');
+            showProgress(false);
+            showDownloadSection(false);
+            updateProgress(0, 'Inizializzazione...');
+        }
+
+        function disableForm(disabled) {
+            document.getElementById('youtubeUrl').disabled = disabled;
+            document.getElementById('convertBtn').disabled = disabled;
+            document.getElementById('pasteBtn').disabled = disabled;
+            
+            const btnText = disabled ? '<span class="spinner"></span> Elaborazione...' : '🚀 Converti';
+            document.getElementById('convertBtn').innerHTML = btnText;
+        }
+
+        function showProgress(show) {
+            const container = document.getElementById('progressContainer');
+            if (show) {
+                container.classList.add('show');
+            } else {
+                container.classList.remove('show');
+            }
+        }
+
+        function updateProgress(percentage, message) {
+            const bar = document.getElementById('progressBar');
+            const text = document.getElementById('progressPercentage');
+            const msg = document.getElementById('progressMessage');
+
+            bar.style.width = percentage + '%';
+            text.textContent = Math.round(percentage) + '%';
+            msg.textContent = message;
+        }
+
+        function showStatus(type, message) {
+            const statusEl = document.getElementById('statusMessage');
+            const iconEl = document.getElementById('statusIcon');
+            const textEl = document.getElementById('statusText');
+
+            if (!type) {
+                statusEl.classList.remove('show', 'success', 'error');
+                return;
+            }
+
+            statusEl.className = 'status-message show ' + type;
+            iconEl.textContent = type === 'success' ? '✅' : '❌';
+            textEl.textContent = message;
+        }
+
+        function showDownloadSection(show) {
+            const section = document.getElementById('downloadSection');
+            if (show) {
+                section.classList.add('show');
+            } else {
+                section.classList.remove('show');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            
+            const icon = type === 'success' ? '✅' : '❌';
+            toast.innerHTML = `<span style="font-size: 1.2rem;">${icon}</span><span>${message}</span>`;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Download Functions
+        async function downloadFile(format) {
+            if (!currentVideoId) {
+                showToast('Nessun video da scaricare', 'error');
+                return;
+            }
+
+            const endpoints = {
+                text: '/api/download-text',
+                docx: '/api/download-docx',
+                pdf: '/api/download-pdf',
+                audio: '/api/download-audio'
+            };
+
+            const formatNames = {
+                text: 'TXT',
+                docx: 'DOCX',
+                pdf: 'PDF',
+                audio: 'MP3'
+            };
+
+            try {
+                showToast(`Download ${formatNames[format]} in corso...`, 'success');
+
+                const url = `${endpoints[format]}/${currentVideoId}`;
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = '';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Update stats
+                const stats = JSON.parse(localStorage.getItem('stats') || '{"downloads": 0}');
+                stats.downloads = (stats.downloads || 0) + 1;
+                localStorage.setItem('stats', JSON.stringify(stats));
+                updateStats();
+
+            } catch (error) {
+                showToast('Errore durante il download', 'error');
+                console.error('Download error:', error);
+            }
+        }
+
+        // History Management
+        function saveToHistory(item) {
+            const history = JSON.parse(localStorage.getItem('conversionHistory') || '[]');
+            history.unshift(item);
+            
+            // Keep only last 10
+            if (history.length > 10) {
+                history.pop();
+            }
+            
+            localStorage.setItem('conversionHistory', JSON.stringify(history));
+            loadHistory();
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('conversionHistory') || '[]');
+            const container = document.getElementById('historyList');
+            const section = document.getElementById('historySection');
+
+            if (history.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            container.innerHTML = '';
+
+            history.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div class="history-item-title">📹 ${item.videoId} (${item.sourceLang || 'Unknown'})</div>
+                    <div class="history-item-date">${new Date(item.date).toLocaleString('it-IT')}</div>
+                `;
+                div.onclick = () => {
+                    document.getElementById('youtubeUrl').value = item.url;
+                    showToast('URL caricato dalla cronologia', 'success');
+                };
+                container.appendChild(div);
+            });
+        }
+
+        function clearHistory() {
+            if (confirm('Vuoi davvero cancellare tutta la cronologia?')) {
+                localStorage.removeItem('conversionHistory');
+                loadHistory();
+                showToast('Cronologia cancellata', 'success');
+            }
+        }
+
+        // Stats Management
+        function updateStats() {
+            const history = JSON.parse(localStorage.getItem('conversionHistory') || '[]');
+            const stats = JSON.parse(localStorage.getItem('stats') || '{"downloads": 0}');
+
+            document.getElementById('statConversions').textContent = history.length;
+            document.getElementById('statDownloads').textContent = stats.downloads || 0;
+        }
+    </script>
+</body>
+</html>

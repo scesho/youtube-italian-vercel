@@ -1,0 +1,12 @@
+{
+  "name": "youtube-italian",
+  "version": "4.0.0",
+  "description": "Converti video YouTube in sottotitoli e audio italiani",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "keywords": ["youtube", "italian", "subtitles", "translator"],
+  "author": "Scesho",
+  "license": "MIT"
+}

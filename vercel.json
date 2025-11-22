@@ -1,0 +1,76 @@
+{
+  "version": 2,
+  "name": "youtube-italian",
+  "builds": [
+    {
+      "src": "api/*.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/process",
+      "dest": "/api/process.py"
+    },
+    {
+      "src": "/api/progress/(.*)",
+      "dest": "/api/progress.py"
+    },
+    {
+      "src": "/api/preview/(.*)",
+      "dest": "/api/preview.py"
+    },
+    {
+      "src": "/api/download-text/(.*)",
+      "dest": "/api/download_text.py"
+    },
+    {
+      "src": "/api/download-pdf/(.*)",
+      "dest": "/api/download_pdf.py"
+    },
+    {
+      "src": "/api/download-docx/(.*)",
+      "dest": "/api/download_docx.py"
+    },
+    {
+      "src": "/api/download-audio/(.*)",
+      "dest": "/api/download_audio.py"
+    },
+    {
+      "src": "/api/health",
+      "dest": "/api/health.py"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/public/manifest.json"
+    },
+    {
+      "src": "/sw.js",
+      "dest": "/public/sw.js"
+    },
+    {
+      "src": "/icons/(.*)",
+      "dest": "/public/icons/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,POST,PUT" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+      ]
+    }
+  ],
+  "functions": {
+    "api/*.py": {
+      "maxDuration": 60
+    }
+  }
+}
